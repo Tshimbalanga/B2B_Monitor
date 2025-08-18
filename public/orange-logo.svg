@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 60" width="200" height="60">
+  <!-- Orange logo background -->
+  <rect x="0" y="0" width="60" height="60" rx="8" fill="#FF7900"/>
+  
+  <!-- Orange "O" letter -->
+  <circle cx="30" cy="30" r="18" fill="none" stroke="white" stroke-width="4"/>
+  <circle cx="30" cy="30" r="8" fill="white"/>
+  
+  <!-- Orange text -->
+  <text x="75" y="25" font-family="Arial, sans-serif" font-size="20" font-weight="bold" fill="#FF7900">Orange</text>
+  <text x="75" y="42" font-family="Arial, sans-serif" font-size="12" fill="#4D4D4D">Telecom</text>
+</svg>
