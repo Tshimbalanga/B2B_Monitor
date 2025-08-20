@@ -30,6 +30,8 @@ def poll_device_oids(device_id: int) -> int:
             snmpv3_auth_key=device.snmpv3_auth_key,
             snmpv3_priv_protocol=device.snmpv3_priv_protocol,
             snmpv3_priv_key=device.snmpv3_priv_key,
+            simulate=device.is_simulated,
+            simulate_seed=device.simulated_mib_seed,
         )
         if not ok:
             continue
@@ -60,6 +62,8 @@ def walk_and_update_device(device_id: int) -> int:
         snmpv3_auth_key=device.snmpv3_auth_key,
         snmpv3_priv_protocol=device.snmpv3_priv_protocol,
         snmpv3_priv_key=device.snmpv3_priv_key,
+        simulate=device.is_simulated,
+        simulate_seed=device.simulated_mib_seed,
     )
     now = dj_timezone.now()
     upserted = 0

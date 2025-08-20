@@ -23,6 +23,9 @@ class Device(models.Model):
     snmpv3_priv_key = models.CharField(max_length=256, blank=True)
     description = models.TextField(blank=True)
     poll_interval_seconds = models.PositiveIntegerField(default=300)
+    # Simulation support
+    is_simulated = models.BooleanField(default=False)
+    simulated_mib_seed = models.CharField(max_length=64, blank=True, help_text="Optional seed to vary simulated values")
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

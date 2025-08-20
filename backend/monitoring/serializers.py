@@ -19,6 +19,8 @@ class DeviceSerializer(serializers.ModelSerializer):
             "snmpv3_auth_key",
             "snmpv3_priv_protocol",
             "snmpv3_priv_key",
+            "is_simulated",
+            "simulated_mib_seed",
             "description",
             "poll_interval_seconds",
             "created_at",

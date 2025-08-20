@@ -14,7 +14,7 @@ from .snmp_utils import snmp_get, snmp_walk
 class DeviceViewSet(viewsets.ModelViewSet):
     queryset = Device.objects.all().order_by("name")
     serializer_class = DeviceSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.AllowAny]
     filterset_fields = ["snmp_version"]
     search_fields = ["name", "ip_address", "description"]
     ordering_fields = ["name", "ip_address", "updated_at"]
@@ -35,7 +35,7 @@ class DeviceViewSet(viewsets.ModelViewSet):
 class OIDViewSet(viewsets.ModelViewSet):
     queryset = OID.objects.select_related("device").all()
     serializer_class = OIDSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.AllowAny]
     filterset_fields = ["device"]
     search_fields = ["oid", "description", "last_value", "device__name"]
     ordering_fields = ["last_updated", "oid"]
@@ -60,6 +60,8 @@ class OIDViewSet(viewsets.ModelViewSet):
             snmpv3_auth_key=oid_obj.device.snmpv3_auth_key,
             snmpv3_priv_protocol=oid_obj.device.snmpv3_priv_protocol,
             snmpv3_priv_key=oid_obj.device.snmpv3_priv_key,
+            simulate=oid_obj.device.is_simulated,
+            simulate_seed=oid_obj.device.simulated_mib_seed,
         )
         if not ok:
             return Response({"error": value}, status=status.HTTP_502_BAD_GATEWAY)
@@ -72,7 +74,7 @@ class OIDViewSet(viewsets.ModelViewSet):
 
 class DeviceOIDViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = OIDSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.AllowAny]
 
     def get_queryset(self):
         device_id = self.kwargs.get("device_pk")

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from datetime import datetime, timezone
 from typing import Dict, Iterable, List, Tuple
+import random
 
 from pysnmp.hlapi.v1arch.asyncio import CommunityData as V1V2CommunityData
 from pysnmp.hlapi.v1arch.asyncio import UdpTransportTarget
@@ -67,6 +68,16 @@ def _usm_from_params(username: str, auth_proto: str, auth_key: str, priv_proto: 
     return UsmUserData(username)
 
 
+def _simulate_value(oid: str, seed: str | None = None) -> str:
+    rnd = random.Random(seed or "")
+    # Simple mapping: uptime OID, hostname OID, CPU, etc. Otherwise random int
+    if oid.endswith(".1.3.6.1.2.1.1.3.0"):
+        return str(rnd.randint(100000, 999999))
+    if oid.endswith(".1.3.6.1.2.1.1.5.0"):
+        return f"sim-device-{rnd.randint(1, 999)}"
+    return str(rnd.randint(1, 100))
+
+
 def snmp_get(
     ip_address: str,
     community: str,
@@ -79,7 +90,11 @@ def snmp_get(
     snmpv3_auth_key: str | None = None,
     snmpv3_priv_protocol: str | None = None,
     snmpv3_priv_key: str | None = None,
+    simulate: bool = False,
+    simulate_seed: str | None = None,
 ) -> Tuple[bool, str]:
+    if simulate:
+        return True, _simulate_value(oid, simulate_seed)
     async def _run():
         async with SnmpDispatcher() as dispatcher:
             if snmp_version in ("v1", "v2c"):
@@ -127,7 +142,19 @@ def snmp_walk(
     snmpv3_auth_key: str | None = None,
     snmpv3_priv_protocol: str | None = None,
     snmpv3_priv_key: str | None = None,
+    simulate: bool = False,
+    simulate_seed: str | None = None,
 ) -> List[Tuple[str, str]]:
+    if simulate:
+        rnd = random.Random(simulate_seed or "")
+        fake = []
+        # Generate a few fake OIDs under base_oid
+        for i in range(1, 6):
+            fake.append((f"{base_oid}.{i}", str(rnd.randint(1, 1000))))
+        # Add common system OIDs
+        fake.append(("1.3.6.1.2.1.1.3.0", str(rnd.randint(100000, 999999))))
+        fake.append(("1.3.6.1.2.1.1.5.0", f"sim-device-{rnd.randint(1, 999)}"))
+        return fake
     async def _run():
         rows: List[Tuple[str, str]] = []
         async with SnmpDispatcher() as dispatcher:
