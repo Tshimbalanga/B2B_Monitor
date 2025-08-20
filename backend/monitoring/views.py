@@ -4,6 +4,7 @@ from django.utils import timezone
 from rest_framework import permissions, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
+from django.conf import settings
 
 from .models import Device, OID, OIDHistory
 from .serializers import (
@@ -32,11 +33,22 @@ class DeviceViewSet(viewsets.ModelViewSet):
         serializer.is_valid(raise_exception=True)
         device = serializer.save()
         # Initial walk to populate OIDs
-        walk_and_update_device.delay(device.id) if hasattr(walk_and_update_device, "delay") else walk_and_update_device(device.id)
+        if getattr(settings, "CELERY_TASK_ALWAYS_EAGER", False):
+            walk_and_update_device(device.id)
+        else:
+            walk_and_update_device.delay(device.id)
         # Start continuous collection
         device.is_collecting = True
         device.save(update_fields=["is_collecting"])
-        continuous_collect.delay(device.id) if hasattr(continuous_collect, "delay") else continuous_collect(device.id)
+        if getattr(settings, "CELERY_TASK_ALWAYS_EAGER", False):
+            # In eager mode, perform one immediate cycle only
+            poll_device_oids(device.id)
+            try:
+                walk_and_update_device(device.id)
+            except Exception:
+                pass
+        else:
+            continuous_collect.delay(device.id)
         return Response(DeviceSerializer(device).data, status=status.HTTP_201_CREATED)
 
     @action(detail=False, methods=["post"], url_path="integrate-v1")
@@ -53,10 +65,20 @@ class DeviceViewSet(viewsets.ModelViewSet):
             is_simulated=payload.get("is_simulated", False),
             simulated_mib_seed=payload.get("simulated_mib_seed", ""),
         )
-        walk_and_update_device.delay(device.id) if hasattr(walk_and_update_device, "delay") else walk_and_update_device(device.id)
+        if getattr(settings, "CELERY_TASK_ALWAYS_EAGER", False):
+            walk_and_update_device(device.id)
+        else:
+            walk_and_update_device.delay(device.id)
         device.is_collecting = True
         device.save(update_fields=["is_collecting"])
-        continuous_collect.delay(device.id) if hasattr(continuous_collect, "delay") else continuous_collect(device.id)
+        if getattr(settings, "CELERY_TASK_ALWAYS_EAGER", False):
+            poll_device_oids(device.id)
+            try:
+                walk_and_update_device(device.id)
+            except Exception:
+                pass
+        else:
+            continuous_collect.delay(device.id)
         return Response(DeviceSerializer(device).data, status=status.HTTP_201_CREATED)
 
     @action(detail=False, methods=["post"], url_path="integrate-v2c")
@@ -73,10 +95,20 @@ class DeviceViewSet(viewsets.ModelViewSet):
             is_simulated=payload.get("is_simulated", False),
             simulated_mib_seed=payload.get("simulated_mib_seed", ""),
         )
-        walk_and_update_device.delay(device.id) if hasattr(walk_and_update_device, "delay") else walk_and_update_device(device.id)
+        if getattr(settings, "CELERY_TASK_ALWAYS_EAGER", False):
+            walk_and_update_device(device.id)
+        else:
+            walk_and_update_device.delay(device.id)
         device.is_collecting = True
         device.save(update_fields=["is_collecting"])
-        continuous_collect.delay(device.id) if hasattr(continuous_collect, "delay") else continuous_collect(device.id)
+        if getattr(settings, "CELERY_TASK_ALWAYS_EAGER", False):
+            poll_device_oids(device.id)
+            try:
+                walk_and_update_device(device.id)
+            except Exception:
+                pass
+        else:
+            continuous_collect.delay(device.id)
         return Response(DeviceSerializer(device).data, status=status.HTTP_201_CREATED)
 
     @action(detail=False, methods=["post"], url_path="integrate-v3")
@@ -96,22 +128,38 @@ class DeviceViewSet(viewsets.ModelViewSet):
             snmpv3_priv_protocol=payload.get("snmpv3_priv_protocol", ""),
             snmpv3_priv_key=payload.get("snmpv3_priv_key", ""),
         )
-        walk_and_update_device.delay(device.id) if hasattr(walk_and_update_device, "delay") else walk_and_update_device(device.id)
+        if getattr(settings, "CELERY_TASK_ALWAYS_EAGER", False):
+            walk_and_update_device(device.id)
+        else:
+            walk_and_update_device.delay(device.id)
         device.is_collecting = True
         device.save(update_fields=["is_collecting"])
-        continuous_collect.delay(device.id) if hasattr(continuous_collect, "delay") else continuous_collect(device.id)
+        if getattr(settings, "CELERY_TASK_ALWAYS_EAGER", False):
+            poll_device_oids(device.id)
+            try:
+                walk_and_update_device(device.id)
+            except Exception:
+                pass
+        else:
+            continuous_collect.delay(device.id)
         return Response(DeviceSerializer(device).data, status=status.HTTP_201_CREATED)
 
     @action(detail=True, methods=["post"], url_path="poll")
     def poll(self, request, pk=None):
         device = self.get_object()
-        result = poll_device_oids.delay(device.id) if hasattr(poll_device_oids, "delay") else poll_device_oids(device.id)
+        if getattr(settings, "CELERY_TASK_ALWAYS_EAGER", False):
+            poll_device_oids(device.id)
+        else:
+            poll_device_oids.delay(device.id)
         return Response({"status": "scheduled", "device_id": device.id})
 
     @action(detail=True, methods=["post"], url_path="walk")
     def walk(self, request, pk=None):
         device = self.get_object()
-        result = walk_and_update_device.delay(device.id) if hasattr(walk_and_update_device, "delay") else walk_and_update_device(device.id)
+        if getattr(settings, "CELERY_TASK_ALWAYS_EAGER", False):
+            walk_and_update_device(device.id)
+        else:
+            walk_and_update_device.delay(device.id)
         return Response({"status": "scheduled", "device_id": device.id})
 
     @action(detail=True, methods=["post"], url_path="start-collect")
@@ -119,7 +167,14 @@ class DeviceViewSet(viewsets.ModelViewSet):
         device = self.get_object()
         device.is_collecting = True
         device.save(update_fields=["is_collecting"])
-        continuous_collect.delay(device.id) if hasattr(continuous_collect, "delay") else continuous_collect(device.id)
+        if getattr(settings, "CELERY_TASK_ALWAYS_EAGER", False):
+            poll_device_oids(device.id)
+            try:
+                walk_and_update_device(device.id)
+            except Exception:
+                pass
+        else:
+            continuous_collect.delay(device.id)
         return Response({"status": "collecting", "device_id": device.id})
 
     @action(detail=True, methods=["post"], url_path="stop-collect")

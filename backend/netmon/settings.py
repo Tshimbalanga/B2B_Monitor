@@ -110,6 +110,7 @@ CORS_ALLOW_ALL_ORIGINS = True
 # Celery settings
 CELERY_BROKER_URL = os.environ.get("CELERY_BROKER_URL", "redis://localhost:6379/0")
 CELERY_RESULT_BACKEND = os.environ.get("CELERY_RESULT_BACKEND", CELERY_BROKER_URL)
+# For local dev without Redis, set CELERY_TASK_ALWAYS_EAGER=1 (runs tasks inline)
 CELERY_TASK_ALWAYS_EAGER = os.environ.get("CELERY_TASK_ALWAYS_EAGER", "0") == "1"
 
 # Optional: Periodic schedule to poll all devices every 5 minutes
