@@ -85,6 +85,7 @@ def snmp_get(
     timeout: int = 2,
     retries: int = 1,
     snmp_version: str = "v2c",
+    snmp_port: int = 161,
     snmpv3_username: str | None = None,
     snmpv3_auth_protocol: str | None = None,
     snmpv3_auth_key: str | None = None,
@@ -101,7 +102,7 @@ def snmp_get(
                 error_indication, error_status, error_index, var_binds = await v1v2_get_cmd(
                     dispatcher,
                     _community_data(snmp_version, community),
-                    UdpTransportTarget((ip_address, 161), timeout=timeout, retries=retries),
+                    UdpTransportTarget((ip_address, snmp_port), timeout=timeout, retries=retries),
                     ObjectType(ObjectIdentity(oid)),
                 )
             else:
@@ -115,7 +116,7 @@ def snmp_get(
                 error_indication, error_status, error_index, var_binds = await v3_get_cmd(
                     dispatcher,
                     user,
-                    UdpTransportTarget((ip_address, 161), timeout=timeout, retries=retries),
+                    UdpTransportTarget((ip_address, snmp_port), timeout=timeout, retries=retries),
                     ContextData(),
                     ObjectType(ObjectIdentity(oid)),
                 )
@@ -137,6 +138,7 @@ def snmp_walk(
     timeout: int = 2,
     retries: int = 1,
     snmp_version: str = "v2c",
+    snmp_port: int = 161,
     snmpv3_username: str | None = None,
     snmpv3_auth_protocol: str | None = None,
     snmpv3_auth_key: str | None = None,
@@ -162,7 +164,7 @@ def snmp_walk(
                 agen = v1v2_next_cmd(
                     dispatcher,
                     _community_data(snmp_version, community),
-                    UdpTransportTarget((ip_address, 161), timeout=timeout, retries=retries),
+                    UdpTransportTarget((ip_address, snmp_port), timeout=timeout, retries=retries),
                     ObjectType(ObjectIdentity(base_oid)),
                 )
             else:
@@ -176,7 +178,7 @@ def snmp_walk(
                 agen = v3_next_cmd(
                     dispatcher,
                     user,
-                    UdpTransportTarget((ip_address, 161), timeout=timeout, retries=retries),
+                    UdpTransportTarget((ip_address, snmp_port), timeout=timeout, retries=retries),
                     ContextData(),
                     ObjectType(ObjectIdentity(base_oid)),
                 )

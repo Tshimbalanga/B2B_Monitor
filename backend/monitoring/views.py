@@ -6,7 +6,14 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 
 from .models import Device, OID, OIDHistory
-from .serializers import DeviceSerializer, OIDHistorySerializer, OIDSerializer
+from .serializers import (
+    DeviceSerializer,
+    OIDHistorySerializer,
+    OIDSerializer,
+    IntegrateV1Serializer,
+    IntegrateV2CSerializer,
+    IntegrateV3Serializer,
+)
 from .tasks import poll_device_oids, walk_and_update_device, continuous_collect
 from .snmp_utils import snmp_get, snmp_walk
 
@@ -34,11 +41,18 @@ class DeviceViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=["post"], url_path="integrate-v1")
     def integrate_v1(self, request):
-        payload = dict(request.data)
-        payload["snmp_version"] = "v1"
-        serializer = DeviceSerializer(data=payload)
-        serializer.is_valid(raise_exception=True)
-        device = serializer.save()
+        data = IntegrateV1Serializer(data=request.data)
+        data.is_valid(raise_exception=True)
+        payload = data.validated_data
+        device = Device.objects.create(
+            name=payload["name"],
+            ip_address=payload["ip_address"],
+            snmp_port=payload.get("snmp_port", 161),
+            snmp_version="v1",
+            community=payload["community"],
+            is_simulated=payload.get("is_simulated", False),
+            simulated_mib_seed=payload.get("simulated_mib_seed", ""),
+        )
         walk_and_update_device.delay(device.id) if hasattr(walk_and_update_device, "delay") else walk_and_update_device(device.id)
         device.is_collecting = True
         device.save(update_fields=["is_collecting"])
@@ -47,11 +61,18 @@ class DeviceViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=["post"], url_path="integrate-v2c")
     def integrate_v2c(self, request):
-        payload = dict(request.data)
-        payload["snmp_version"] = "v2c"
-        serializer = DeviceSerializer(data=payload)
-        serializer.is_valid(raise_exception=True)
-        device = serializer.save()
+        data = IntegrateV2CSerializer(data=request.data)
+        data.is_valid(raise_exception=True)
+        payload = data.validated_data
+        device = Device.objects.create(
+            name=payload["name"],
+            ip_address=payload["ip_address"],
+            snmp_port=payload.get("snmp_port", 161),
+            snmp_version="v2c",
+            community=payload["community"],
+            is_simulated=payload.get("is_simulated", False),
+            simulated_mib_seed=payload.get("simulated_mib_seed", ""),
+        )
         walk_and_update_device.delay(device.id) if hasattr(walk_and_update_device, "delay") else walk_and_update_device(device.id)
         device.is_collecting = True
         device.save(update_fields=["is_collecting"])
@@ -60,11 +81,21 @@ class DeviceViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=["post"], url_path="integrate-v3")
     def integrate_v3(self, request):
-        payload = dict(request.data)
-        payload["snmp_version"] = "v3"
-        serializer = DeviceSerializer(data=payload)
-        serializer.is_valid(raise_exception=True)
-        device = serializer.save()
+        data = IntegrateV3Serializer(data=request.data)
+        data.is_valid(raise_exception=True)
+        payload = data.validated_data
+        device = Device.objects.create(
+            name=payload["name"],
+            ip_address=payload["ip_address"],
+            snmp_port=payload.get("snmp_port", 161),
+            snmp_version="v3",
+            snmpv3_username=payload["snmpv3_username"],
+            snmpv3_security_level=payload["snmpv3_security_level"],
+            snmpv3_auth_protocol=payload.get("snmpv3_auth_protocol", ""),
+            snmpv3_auth_key=payload.get("snmpv3_auth_key", ""),
+            snmpv3_priv_protocol=payload.get("snmpv3_priv_protocol", ""),
+            snmpv3_priv_key=payload.get("snmpv3_priv_key", ""),
+        )
         walk_and_update_device.delay(device.id) if hasattr(walk_and_update_device, "delay") else walk_and_update_device(device.id)
         device.is_collecting = True
         device.save(update_fields=["is_collecting"])
@@ -122,6 +153,7 @@ class OIDViewSet(viewsets.ModelViewSet):
             oid_obj.device.community,
             oid_obj.oid,
             snmp_version=oid_obj.device.snmp_version,
+            snmp_port=oid_obj.device.snmp_port,
             snmpv3_username=oid_obj.device.snmpv3_username,
             snmpv3_auth_protocol=oid_obj.device.snmpv3_auth_protocol,
             snmpv3_auth_key=oid_obj.device.snmpv3_auth_key,
