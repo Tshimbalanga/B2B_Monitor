@@ -6,4 +6,5 @@ celery
 redis
 django-cors-headers
 django-filter
+drf-spectacular
 
