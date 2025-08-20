@@ -26,6 +26,7 @@ class Device(models.Model):
     # Simulation support
     is_simulated = models.BooleanField(default=False)
     simulated_mib_seed = models.CharField(max_length=64, blank=True, help_text="Optional seed to vary simulated values")
+    is_collecting = models.BooleanField(default=False)
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

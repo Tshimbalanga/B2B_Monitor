@@ -4,6 +4,7 @@ from datetime import datetime, timezone
 from typing import List, Tuple
 
 from celery import shared_task
+from celery import current_app
 from django.db import transaction
 from django.utils import timezone as dj_timezone
 
@@ -86,4 +87,24 @@ def poll_all_devices() -> int:
     for device in Device.objects.all():
         total += poll_device_oids(device.id)
     return total
+
+
+@shared_task(bind=True)
+def continuous_collect(self, device_id: int) -> None:
+    try:
+        device = Device.objects.get(id=device_id)
+    except Device.DoesNotExist:
+        return
+    if not device.is_collecting:
+        return
+    # First poll known OIDs
+    poll_device_oids(device_id)
+    # Then opportunistic walk to discover more
+    try:
+        walk_and_update_device(device_id)
+    except Exception:
+        pass
+    # Re-schedule itself
+    interval = max(5, int(device.poll_interval_seconds))
+    self.apply_async((device_id,), countdown=interval)
 

@@ -7,7 +7,7 @@ from rest_framework.response import Response
 
 from .models import Device, OID, OIDHistory
 from .serializers import DeviceSerializer, OIDHistorySerializer, OIDSerializer
-from .tasks import poll_device_oids, walk_and_update_device
+from .tasks import poll_device_oids, walk_and_update_device, continuous_collect
 from .snmp_utils import snmp_get, snmp_walk
 
 
@@ -18,6 +18,19 @@ class DeviceViewSet(viewsets.ModelViewSet):
     filterset_fields = ["snmp_version"]
     search_fields = ["name", "ip_address", "description"]
     ordering_fields = ["name", "ip_address", "updated_at"]
+
+    @action(detail=False, methods=["post"], url_path="integrate")
+    def integrate(self, request):
+        serializer = DeviceSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        device = serializer.save()
+        # Initial walk to populate OIDs
+        walk_and_update_device.delay(device.id) if hasattr(walk_and_update_device, "delay") else walk_and_update_device(device.id)
+        # Start continuous collection
+        device.is_collecting = True
+        device.save(update_fields=["is_collecting"])
+        continuous_collect.delay(device.id) if hasattr(continuous_collect, "delay") else continuous_collect(device.id)
+        return Response(DeviceSerializer(device).data, status=status.HTTP_201_CREATED)
 
     @action(detail=True, methods=["post"], url_path="poll")
     def poll(self, request, pk=None):
@@ -30,6 +43,21 @@ class DeviceViewSet(viewsets.ModelViewSet):
         device = self.get_object()
         result = walk_and_update_device.delay(device.id) if hasattr(walk_and_update_device, "delay") else walk_and_update_device(device.id)
         return Response({"status": "scheduled", "device_id": device.id})
+
+    @action(detail=True, methods=["post"], url_path="start-collect")
+    def start_collect(self, request, pk=None):
+        device = self.get_object()
+        device.is_collecting = True
+        device.save(update_fields=["is_collecting"])
+        continuous_collect.delay(device.id) if hasattr(continuous_collect, "delay") else continuous_collect(device.id)
+        return Response({"status": "collecting", "device_id": device.id})
+
+    @action(detail=True, methods=["post"], url_path="stop-collect")
+    def stop_collect(self, request, pk=None):
+        device = self.get_object()
+        device.is_collecting = False
+        device.save(update_fields=["is_collecting"])
+        return Response({"status": "stopped", "device_id": device.id})
 
 
 class OIDViewSet(viewsets.ModelViewSet):
