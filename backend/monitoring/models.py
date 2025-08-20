@@ -15,6 +15,12 @@ class Device(models.Model):
     ip_address = models.GenericIPAddressField(protocol="IPv4")
     snmp_version = models.CharField(max_length=3, choices=SNMP_VERSIONS, default="v2c")
     community = models.CharField(max_length=128, blank=True, help_text="SNMP community for v1/v2c")
+    # SNMPv3 credentials
+    snmpv3_username = models.CharField(max_length=128, blank=True)
+    snmpv3_auth_protocol = models.CharField(max_length=32, blank=True, help_text="MD5|SHA|SHA224|SHA256|SHA384|SHA512 or empty")
+    snmpv3_auth_key = models.CharField(max_length=256, blank=True)
+    snmpv3_priv_protocol = models.CharField(max_length=32, blank=True, help_text="DES|3DES|AES|AES192|AES256 or empty")
+    snmpv3_priv_key = models.CharField(max_length=256, blank=True)
     description = models.TextField(blank=True)
     poll_interval_seconds = models.PositiveIntegerField(default=300)
 

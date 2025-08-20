@@ -20,7 +20,17 @@ def poll_device_oids(device_id: int) -> int:
 
     updated_count = 0
     for oid in OID.objects.filter(device=device).all():
-        ok, value = snmp_get(device.ip_address, device.community, oid.oid, snmp_version=device.snmp_version)
+        ok, value = snmp_get(
+            device.ip_address,
+            device.community,
+            oid.oid,
+            snmp_version=device.snmp_version,
+            snmpv3_username=device.snmpv3_username,
+            snmpv3_auth_protocol=device.snmpv3_auth_protocol,
+            snmpv3_auth_key=device.snmpv3_auth_key,
+            snmpv3_priv_protocol=device.snmpv3_priv_protocol,
+            snmpv3_priv_key=device.snmpv3_priv_key,
+        )
         if not ok:
             continue
         with transaction.atomic():
@@ -40,7 +50,17 @@ def walk_and_update_device(device_id: int) -> int:
         return 0
 
     # Perform a walk from 1.3 base to get many OIDs
-    pairs: List[Tuple[str, str]] = snmp_walk(device.ip_address, device.community, "1.3", snmp_version=device.snmp_version)
+    pairs: List[Tuple[str, str]] = snmp_walk(
+        device.ip_address,
+        device.community,
+        "1.3",
+        snmp_version=device.snmp_version,
+        snmpv3_username=device.snmpv3_username,
+        snmpv3_auth_protocol=device.snmpv3_auth_protocol,
+        snmpv3_auth_key=device.snmpv3_auth_key,
+        snmpv3_priv_protocol=device.snmpv3_priv_protocol,
+        snmpv3_priv_key=device.snmpv3_priv_key,
+    )
     now = dj_timezone.now()
     upserted = 0
     with transaction.atomic():

@@ -55,6 +55,11 @@ class OIDViewSet(viewsets.ModelViewSet):
             oid_obj.device.community,
             oid_obj.oid,
             snmp_version=oid_obj.device.snmp_version,
+            snmpv3_username=oid_obj.device.snmpv3_username,
+            snmpv3_auth_protocol=oid_obj.device.snmpv3_auth_protocol,
+            snmpv3_auth_key=oid_obj.device.snmpv3_auth_key,
+            snmpv3_priv_protocol=oid_obj.device.snmpv3_priv_protocol,
+            snmpv3_priv_key=oid_obj.device.snmpv3_priv_key,
         )
         if not ok:
             return Response({"error": value}, status=status.HTTP_502_BAD_GATEWAY)
