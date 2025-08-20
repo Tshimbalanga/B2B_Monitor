@@ -32,6 +32,45 @@ class DeviceViewSet(viewsets.ModelViewSet):
         continuous_collect.delay(device.id) if hasattr(continuous_collect, "delay") else continuous_collect(device.id)
         return Response(DeviceSerializer(device).data, status=status.HTTP_201_CREATED)
 
+    @action(detail=False, methods=["post"], url_path="integrate-v1")
+    def integrate_v1(self, request):
+        payload = dict(request.data)
+        payload["snmp_version"] = "v1"
+        serializer = DeviceSerializer(data=payload)
+        serializer.is_valid(raise_exception=True)
+        device = serializer.save()
+        walk_and_update_device.delay(device.id) if hasattr(walk_and_update_device, "delay") else walk_and_update_device(device.id)
+        device.is_collecting = True
+        device.save(update_fields=["is_collecting"])
+        continuous_collect.delay(device.id) if hasattr(continuous_collect, "delay") else continuous_collect(device.id)
+        return Response(DeviceSerializer(device).data, status=status.HTTP_201_CREATED)
+
+    @action(detail=False, methods=["post"], url_path="integrate-v2c")
+    def integrate_v2c(self, request):
+        payload = dict(request.data)
+        payload["snmp_version"] = "v2c"
+        serializer = DeviceSerializer(data=payload)
+        serializer.is_valid(raise_exception=True)
+        device = serializer.save()
+        walk_and_update_device.delay(device.id) if hasattr(walk_and_update_device, "delay") else walk_and_update_device(device.id)
+        device.is_collecting = True
+        device.save(update_fields=["is_collecting"])
+        continuous_collect.delay(device.id) if hasattr(continuous_collect, "delay") else continuous_collect(device.id)
+        return Response(DeviceSerializer(device).data, status=status.HTTP_201_CREATED)
+
+    @action(detail=False, methods=["post"], url_path="integrate-v3")
+    def integrate_v3(self, request):
+        payload = dict(request.data)
+        payload["snmp_version"] = "v3"
+        serializer = DeviceSerializer(data=payload)
+        serializer.is_valid(raise_exception=True)
+        device = serializer.save()
+        walk_and_update_device.delay(device.id) if hasattr(walk_and_update_device, "delay") else walk_and_update_device(device.id)
+        device.is_collecting = True
+        device.save(update_fields=["is_collecting"])
+        continuous_collect.delay(device.id) if hasattr(continuous_collect, "delay") else continuous_collect(device.id)
+        return Response(DeviceSerializer(device).data, status=status.HTTP_201_CREATED)
+
     @action(detail=True, methods=["post"], url_path="poll")
     def poll(self, request, pk=None):
         device = self.get_object()
