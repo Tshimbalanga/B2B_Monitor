@@ -17,6 +17,7 @@ from .serializers import (
 )
 from .tasks import poll_device_oids, walk_and_update_device, continuous_collect
 from .snmp_utils import snmp_get, snmp_walk
+from .net_utils import ping_host
 
 
 class DeviceViewSet(viewsets.ModelViewSet):
@@ -186,6 +187,22 @@ class DeviceViewSet(viewsets.ModelViewSet):
         device.is_collecting = False
         device.save(update_fields=["is_collecting"])
         return Response({"status": "stopped", "device_id": device.id})
+
+    @action(detail=True, methods=["get"], url_path="ping")
+    def ping(self, request, pk=None):
+        device = self.get_object()
+        ok, output = ping_host(target_ip=device.ip_address, source_ip=device.backend_server_ip or None)
+        return Response({"ok": ok, "output": output})
+
+    @action(detail=True, methods=["post"], url_path="backend-ip")
+    def set_backend_ip(self, request, pk=None):
+        device = self.get_object()
+        new_ip = request.data.get("backend_server_ip")
+        if not new_ip:
+            return Response({"error": "backend_server_ip required"}, status=400)
+        device.backend_server_ip = new_ip
+        device.save(update_fields=["backend_server_ip"])
+        return Response({"backend_server_ip": device.backend_server_ip})
 
 
 class OIDViewSet(viewsets.ModelViewSet):
