@@ -1,0 +1,4 @@
+web: python manage.py runserver 0.0.0.0:8000
+worker: celery -A netmon worker -l info
+beat: celery -A netmon beat -l info
+

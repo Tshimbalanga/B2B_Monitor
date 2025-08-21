@@ -1,0 +1,10 @@
+Django>=5,<5.3
+djangorestframework
+djangorestframework-simplejwt
+pysnmp>=7,<8
+celery
+redis
+django-cors-headers
+django-filter
+drf-spectacular
+
