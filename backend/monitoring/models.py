@@ -24,6 +24,8 @@ class Device(models.Model):
     snmpv3_priv_protocol = models.CharField(max_length=32, blank=True, help_text="DES|3DES|AES|AES192|AES256 or empty")
     snmpv3_priv_key = models.CharField(max_length=256, blank=True)
     description = models.TextField(blank=True)
+    # Monitoring backend server IP used during router integration
+    backend_server_ip = models.GenericIPAddressField(protocol="IPv4")
     poll_interval_seconds = models.PositiveIntegerField(default=300)
     # Simulation support
     is_simulated = models.BooleanField(default=False)

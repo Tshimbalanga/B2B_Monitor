@@ -12,6 +12,7 @@ class DeviceSerializer(serializers.ModelSerializer):
             "id",
             "name",
             "ip_address",
+            "backend_server_ip",
             "snmp_port",
             "snmp_version",
             "community",
@@ -37,6 +38,7 @@ class DeviceSerializer(serializers.ModelSerializer):
 class IntegrateV1Serializer(serializers.Serializer):
     name = serializers.CharField(max_length=128)
     ip_address = serializers.IPAddressField(protocol="IPv4")
+    backend_server_ip = serializers.IPAddressField(protocol="IPv4")
     snmp_port = serializers.IntegerField(min_value=1, max_value=65535, required=False, default=161)
     community = serializers.CharField(max_length=128)
     is_simulated = serializers.BooleanField(required=False, default=False)
@@ -46,6 +48,7 @@ class IntegrateV1Serializer(serializers.Serializer):
 class IntegrateV2CSerializer(serializers.Serializer):
     name = serializers.CharField(max_length=128)
     ip_address = serializers.IPAddressField(protocol="IPv4")
+    backend_server_ip = serializers.IPAddressField(protocol="IPv4")
     snmp_port = serializers.IntegerField(min_value=1, max_value=65535, required=False, default=161)
     community = serializers.CharField(max_length=128)
     is_simulated = serializers.BooleanField(required=False, default=False)
@@ -55,6 +58,7 @@ class IntegrateV2CSerializer(serializers.Serializer):
 class IntegrateV3Serializer(serializers.Serializer):
     name = serializers.CharField(max_length=128)
     ip_address = serializers.IPAddressField(protocol="IPv4")
+    backend_server_ip = serializers.IPAddressField(protocol="IPv4")
     snmp_port = serializers.IntegerField(min_value=1, max_value=65535, required=False, default=161)
     snmpv3_username = serializers.CharField(max_length=128)
     snmpv3_security_level = serializers.ChoiceField(choices=("noAuthNoPriv", "authNoPriv", "authPriv"))

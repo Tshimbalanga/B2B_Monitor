@@ -59,6 +59,7 @@ class DeviceViewSet(viewsets.ModelViewSet):
         device = Device.objects.create(
             name=payload["name"],
             ip_address=payload["ip_address"],
+            backend_server_ip=payload["backend_server_ip"],
             snmp_port=payload.get("snmp_port", 161),
             snmp_version="v1",
             community=payload["community"],
@@ -89,6 +90,7 @@ class DeviceViewSet(viewsets.ModelViewSet):
         device = Device.objects.create(
             name=payload["name"],
             ip_address=payload["ip_address"],
+            backend_server_ip=payload["backend_server_ip"],
             snmp_port=payload.get("snmp_port", 161),
             snmp_version="v2c",
             community=payload["community"],
@@ -119,6 +121,7 @@ class DeviceViewSet(viewsets.ModelViewSet):
         device = Device.objects.create(
             name=payload["name"],
             ip_address=payload["ip_address"],
+            backend_server_ip=payload["backend_server_ip"],
             snmp_port=payload.get("snmp_port", 161),
             snmp_version="v3",
             snmpv3_username=payload["snmpv3_username"],
